@@ -1,25 +1,31 @@
-(*
-structure S = RedBlackTreeFn(type key = Int.int; val compare = Int.compare)
-*)
-functor RedBlackTreeFn (type key; val compare : key * key -> order) : MAP =
+functor TreeMapFn (K:ORD_KEY) : ORD_MAP =
 struct
-type key = key
-type 'a entry = key * 'a
+
+exception Impossible (* Internal error *)
+
+structure K = K
+
 datatype color = RED | BLACK
 datatype 'a tree = LEAF
-		 | BRANCH of color * 'a tree * 'a entry * 'a tree
+		 | BRANCH of color * 'a tree * (K.key * 'a) * 'a tree
+
 type 'a map = 'a tree
 
-exception Impossible
 
 val empty = LEAF
 
+fun isEmpty LEAF = true
+  | isEmpty (BRANCH _) = false
+
 fun size LEAF = 0
   | size (BRANCH (_, left, (key, _), right)) = 1 + (size left) + (size right)
+
 fun keys LEAF = []
   | keys (BRANCH (_, left, (key, _), right)) = (keys left) @ [key] @ (keys right)
+
 fun values LEAF = []
   | values (BRANCH (_, left, (_, value), right)) = (values left) @ [value] @ (values right)
+
 fun entries LEAF = []
   | entries (BRANCH (_, left, entry, right)) = (entries left) @ [entry] @ (entries right)
 
@@ -27,7 +33,7 @@ fun member root key =
     let
 	fun member' LEAF = false
 	  | member' (BRANCH(_,left,(key',_),right)) = 
-	    case compare(key,key')
+	    case K.compare(key,key')
 	     of LESS => member' left
 	      | EQUAL => true
 	      | GREATER => member' right
@@ -39,7 +45,7 @@ fun lookup root key =
     let
 	fun lookup' LEAF = NONE
 	  | lookup' (BRANCH(_,left,(key',value'),right)) = 
-	    case compare(key,key')
+	    case K.compare(key,key')
 	     of LESS => lookup' left
 	      | EQUAL => SOME value'
 	      | GREATER => lookup' right 
@@ -60,7 +66,7 @@ fun insert ((key,value), root) =
     let
 	fun insert' LEAF = BRANCH(RED,LEAF,(key,value),LEAF)
 	  | insert' (BRANCH(color,left,(key',value'),right)) = 
-	    case compare(key,key')
+	    case K.compare(key,key')
 	     of LESS => balance(color,insert' left,(key',value'),right)
 	      | EQUAL => BRANCH(color,left,(key,value),right)
 	      | GREATER => balance(color,left,(key',value'),insert' right)
@@ -68,6 +74,4 @@ fun insert ((key,value), root) =
 	makeBlack (insert' root)
     end
 end
-
-fun prune root = root
 end
