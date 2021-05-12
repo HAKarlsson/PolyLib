@@ -1,35 +1,38 @@
 (*
-Sort.sort Int.compare [4,3,5,1,2]
+ListUtil.sort Int.compare [4,3,5,1,2,2,1]
 *)
 structure ListUtil =
 struct
-fun sort ord lst = 
+fun sort ord lst =
     let
-	fun split [] = ([],[])
-	  | split [x] = ([x], [])
-	  | split (x::y::lst) = 
-	    let
-		val (xs, ys) = split lst
-	    in
-		(x::xs, y::ys)
-	    end
-	fun merge ([],[]) = []
-	  | merge (xs,[]) = xs
-	  | merge ([],ys) = ys
-	  | merge (x::xs,y::ys) = 
-	    case ord (x,y)
-	     of LESS => x::(merge (xs,y::ys))
-	      | _ => y::(merge (x::xs, ys))
-	fun sort' [] = []
-	  | sort' [x] = [x]
-	  | sort' lst =
-	    let
-		val (xs, ys) = split lst
-	    in
-		merge (sort' xs, sort' ys)
-	    end
+	fun runUp ([], acc) = ([], List.rev acc)
+	  | runUp ([x],acc) = ([], List.rev (x::acc))
+	  | runUp (x::y::xs,acc) =
+	    (case ord(x,y)
+	      of GREATER => (y::xs, List.rev(x::acc))
+	       | _ => runUp (y::xs,x::acc))
+	fun runDown ([], acc) = ([], acc)
+	  | runDown ([x],acc) = ([], x::acc)
+	  | runDown (x::y::xs,acc) =
+	    (case ord(x,y)
+	      of LESS => (y::xs, x::acc)
+	      |  _ => runDown (y::xs,x::acc))
+	fun split ([], acc) = acc
+	  | split ([x], acc) = [x]::acc
+	  | split (x::y::xs,acc) = 
+	    case ord(x,y)
+	     of GREATER => let val (rest, down) = runDown (y::xs, [x])
+			   in split (rest, down::acc) end
+	      | _ => let val (rest, up) = runUp (y::xs, [x])
+		     in split (rest, up::acc) end
+	fun merge ([], ys, acc) = List.revAppend (acc, ys)
+	  | merge (xs, [], acc) = List.revAppend (acc, xs) 
+	  | merge (x::xs, y::ys, acc) = 
+	    case ord(x,y)
+	     of LESS => merge(xs, y::ys, x::acc)
+	      | _ => merge(x::xs, ys, y::acc)
     in
-	sort' lst
+	foldl (fn (xs,ys) => merge (xs,ys,[])) [] (split (lst,[]))
     end
 
 fun intersperse _ [] = []
