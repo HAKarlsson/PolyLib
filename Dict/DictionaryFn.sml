@@ -1,12 +1,16 @@
-functor DictionaryFn (Key:ORDER) : DICTIONARY =
+(* Dictionary/Map based on RedBlackTree *) 
+functor DictionaryFn (type key; val compare : key * key -> order) : DICTIONARY =
 struct
 
-type key = Key.t
+type key = key
+
 exception Impossible (* Internal error *)
 exception E of key
+
 datatype color = R | B
-datatype 'a t = LEAF
-	      | BRAN of color * 'a t * (key * 'a) * 'a t
+datatype 'a dict
+  = LEAF
+  | BRAN of color * 'a dict * (key * 'a) * 'a dict
 
 val empty = LEAF
 
@@ -14,7 +18,7 @@ fun lookup (root, b) =
     let
 	fun loop LEAF = NONE
 	  | loop (BRAN(_,t1,(a,x),t2)) = 
-	    case Key.compare(a,b)
+	    case compare(a,b)
 	     of GREATER => loop t1
 	      | EQUAL => SOME x 
 	      | LESS => loop  t2
@@ -35,7 +39,7 @@ fun insert (root, b, y) =
     let
 	fun loop LEAF = BRAN(R,LEAF,(b, y),LEAF)
 	  | loop (BRAN(c,t1,(a,x),t2)) = 
-	    case Key.compare(a,b)
+	    case compare(a,b)
 	     of GREATER => balance(c,loop t1,(a,x),t2)
 	      | EQUAL => raise E b
 	      | LESS => balance(c,t1,(a,x),loop t2)
@@ -47,7 +51,7 @@ fun update (root, b, y) =
     let
 	fun loop LEAF = BRAN(R,LEAF,(b, y),LEAF)
 	  | loop (BRAN(c,t1,(a,x),t2)) = 
-	    case Key.compare(a,b)
+	    case compare(a,b)
 	     of GREATER => balance(c,loop t1,(a,x),t2)
 	      | EQUAL => BRAN(c,t1,(b,y),t2)
 	      | LESS => balance(c,t1,(a,x),loop t2)
@@ -64,6 +68,6 @@ fun make lst =
     end
 end
 (*
-structure S = DictionaryFn(type t = int; val compare = Int.compare)
+structure S = DictionaryFn(type key = int; val compare = Int.compare)
 val s = S.update (S.empty, 1, "hello")
 *)

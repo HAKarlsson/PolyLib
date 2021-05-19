@@ -1,19 +1,23 @@
-functor SetFn (Key:ORDER) : SET =
+(* Set based on RedBlackTree *)
+functor SetFn (type key; val compare: key * key -> order) : SET =
 struct
 
-type key = Key.t
+type key = key 
+
 exception Impossible (* Internal error *)
-exception E of key
+
 datatype color = R | B
-datatype t = LEAF
-	   | BRAN of color * t * key * t
+datatype set
+  = LEAF
+  | BRAN of color * set * key * set
+
 val empty = LEAF
 
 fun member (root, b) =
     let
 	fun loop LEAF = false
 	  | loop (BRAN(_,t1,a,t2)) = 
-	    case Key.compare(a,b)
+	    case compare(a,b)
 	     of GREATER => loop t1
 	      | EQUAL => true
 	      | LESS => loop  t2
@@ -34,7 +38,7 @@ fun update (root, b) =
     let
 	fun loop LEAF = BRAN(R,LEAF,b,LEAF)
 	  | loop (BRAN(c,t1,a,t2)) = 
-	    case Key.compare(a,b)
+	    case compare(a,b)
 	     of GREATER => balance(c,loop t1,a,t2)
 	      | EQUAL => BRAN(c,t1,b,t2)
 	      | LESS => balance(c,t1,a,loop t2)
@@ -51,6 +55,6 @@ fun make lst =
     end
 end
 (*
-structure S = DictionaryFn(type t = int; val compare = Int.compare)
+structure S = DictionaryFn(type key = int; val compare = Int.compare)
 val s = S.update (S.empty, 1, "hello")
 *)

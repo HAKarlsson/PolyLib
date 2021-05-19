@@ -1,58 +1,59 @@
-signature JSONUtil =
+(* Utility for SML Simple JSON
+   ==============================
+   Utility functions for the 'Simple Standard ML JSON parser' (https://hg.sr.ht/~cannam/sml-simplejson).
+*)
+signature JSON_UTIL =
 sig
-    exception NotBool of JSON.value
-    exception NotInt of JSON.value
-    exception NotNumber of JSON.value
-    exception NotString of JSON.value
-    exception NotObject of JSON.value
-    exception FieldNotFound of JSON.value * string
-    exception NotArray of JSON.value
-    exception ArrayBounds of JSON.value * int
-    exception ElemNotFound of JSON.value
+    exception NotBool of Json.json
+    exception NotNumber of Json.json
+    exception NotString of Json.json
+    exception NotObject of Json.json
+    exception FieldNotFound of Json.json * string
+    exception NotArray of Json.json
+    exception ArrayBounds of Json.json * int
+    exception ElemNotFound of Json.json
     val exnMessage : exn -> string
-    val asBool : JSON.value -> bool
-    val asInt : JSON.value -> Int.int
-    val asIntInf : JSON.value -> IntInf.int
-    val asNumber : JSON.value -> Real.real
-    val asString : JSON.value -> string
-    val findField : JSON.value -> string -> JSON.value option
-    val lookupField : JSON.value -> string -> JSON.value
-    val hasField : string -> JSON.value -> bool
-    val testField : string -> (JSON.value -> bool) -> JSON.value -> bool
-    val asArray : JSON.value -> JSON.value vector
-    val arrayMap : (JSON.value -> 'a) -> JSON.value -> 'a list
+    val asBool : Json.json -> bool
+    val asNumber : Json.json -> Real.real
+    val asString : Json.json -> string
+    val findField : Json.json -> string -> Json.json option
+    val lookupField : Json.json -> string -> Json.json
+    val hasField : string -> Json.json -> bool
+    val testField : string -> (Json.json -> bool) -> Json.json -> bool
+    val asArray : Json.json -> Json.json vector
+    val arrayMap : (Json.json -> 'a) -> Json.json -> 'a list
     datatype edge
       = SEL of string
       | SUB of int
-      | FIND of JSON.value -> bool
+      | FIND of Json.json -> bool
     type path = edge list
-    val get : JSON.value * path -> JSON.value
+    val get : Json.json * path -> Json.json
 end
 
-structure JSONUtil :> JSONUtil =
+structure JsonUtil :> JSON_UTIL =
 struct
-open JSON;
-exception NotBool of value
-exception NotInt of value
-exception NotNumber of value
-exception NotString of value
-exception NotObject of value
-exception FieldNotFound of value * string
-exception NotArray of value
-exception ArrayBounds of value * int
-exception ElemNotFound of value
+open Json;
+exception NotBool of json
+exception NotInt of json
+exception NotNumber of json
+exception NotString of json
+exception NotObject of json
+exception FieldNotFound of json * string
+exception NotArray of json
+exception ArrayBounds of json * int
+exception ElemNotFound of json
+
 fun exnMessage e = General.exnMessage e
+
 fun asBool (BOOL b) = b
   | asBool jv = raise NotBool jv
-fun asInt (INT i) = IntInf.toInt i
-  | asInt jv = raise NotInt jv
-fun asIntInf (INT i) = i
-  | asIntInf jv = raise NotInt jv
-fun asNumber (FLOAT r) = r
-  | asNumber (INT i) = Real.fromInt (IntInf.toInt i)
+
+fun asNumber (NUMBER r) = r
   | asNumber jv = raise NotNumber jv
+
 fun asString (STRING s) = s
   | asString jv = raise NotString jv
+
 fun findField (OBJECT flds) key =
     let
 	fun f [] = NONE
@@ -61,26 +62,32 @@ fun findField (OBJECT flds) key =
 	f flds
     end
   | findField jv _ = raise NotObject jv
+
 fun lookupField jv key =
     case findField jv key
      of SOME jv' => jv'
       | NONE => raise FieldNotFound(jv, key)
+
 fun hasField key (OBJECT flds) = Option.isSome (findField (OBJECT flds) key)
   | hasField _ _ = false
+
 fun testField key pred (OBJECT flds) =
     (case findField (OBJECT flds) key
       of SOME jv => pred jv
        | NONE => false)
   | testField _ _ _ = false
+
 fun asArray (ARRAY lst) = Vector.fromList lst
   | asArray jv = raise NotArray jv
+
 fun arrayMap f (ARRAY lst) = map f lst
   | arrayMap _ jv = raise NotArray jv
     
 datatype edge
   = SEL of string
   | SUB of int
-  | FIND of value -> bool
+  | FIND of json -> bool
+
 type path = edge list
 
 local
@@ -103,4 +110,5 @@ local
 in
 fun get (jv, p) = get' (jv, p)
 end
+
 end

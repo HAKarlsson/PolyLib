@@ -3,6 +3,8 @@ ListUtil.sort Int.compare [4,3,5,1,2,2,1]
 *)
 structure ListUtil =
 struct
+
+(* Merge sort *)
 fun sort ord lst =
     let
 	fun runUp ([], acc) = ([], List.rev acc)
@@ -21,10 +23,12 @@ fun sort ord lst =
 	  | split ([x], acc) = [x]::acc
 	  | split (x::y::xs,acc) = 
 	    case ord(x,y)
-	     of GREATER => let val (rest, down) = runDown (y::xs, [x])
-			   in split (rest, down::acc) end
-	      | _ => let val (rest, up) = runUp (y::xs, [x])
-		     in split (rest, up::acc) end
+	     of GREATER =>
+		let val (rest, down) = runDown (y::xs, [x])
+		in split (rest, down::acc) end
+	      | _ =>
+		let val (rest, up) = runUp (y::xs, [x])
+		in split (rest, up::acc) end
 	fun merge ([], ys, acc) = List.revAppend (acc, ys)
 	  | merge (xs, [], acc) = List.revAppend (acc, xs) 
 	  | merge (x::xs, y::ys, acc) = 
@@ -97,6 +101,8 @@ fun nub xs = nubBy (op=) xs
 fun union xs ys = unionBy (op=) xs ys
 fun intersect xs ys = intersectBy (op=) xs ys
 
+
+(* finite_map list *)
 fun fLookupBy eq k [] = NONE
   | fLookupBy eq k ((k',v')::xs) = 
     if eq(k,k')
