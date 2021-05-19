@@ -1,6 +1,7 @@
 (* Utility for SML Simple JSON
    ==============================
    Utility functions for the 'Simple Standard ML JSON parser' (https://hg.sr.ht/~cannam/sml-simplejson).
+   API based on SML/NJ's Json utility structure.
 *)
 signature JSON_UTIL =
 sig
