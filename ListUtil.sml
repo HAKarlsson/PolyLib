@@ -122,8 +122,14 @@ fun fUpdateBy _ x [] = [x]
     else (k',v')::fUpdateBy eq (k,v) xs
 
 
-fun fLookup k xs = fLookupBy (op=) k xs
-fun fDelete k xs = fDeleteBy (op=) k xs
-fun fUpdate x xs = fUpdateBy (op=) x xs 
+fun fLookup k xs = fLookupBy (op=) k xs;
+fun fDelete k xs = fDeleteBy (op=) k xs;
+fun fUpdate x xs = fUpdateBy (op=) x xs;
+
+fun cartesianProd [] = []
+  | cartesianProd [xs] = map (fn x => [x]) xs
+  | cartesianProd (xs::xss) =
+    let val yss = cartesianProd xss
+    in List.concat (map (fn x => map (fn ys => x::ys) yss) xs) end;
 
 end
